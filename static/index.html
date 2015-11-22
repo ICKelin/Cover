@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+ 
+<head>
+	<meta charset="utf-8">
+	<meta name="author" content="ICKelin">
+
+	<title>ICKelin的个人博客</title>
+	<script type="text/javascript">
+		<!-- 初始化获取所有文章列表 -->
+		window.onload = Load;
+		
+		function Load() {
+			var section = document.getElementById("articles")
+			var aj = new XMLHttpRequest();
+			aj.open('GET', '/article?type=0', false)
+			aj.send(null)
+			section.innerHTML = aj.responseText
+		}
+
+	</script>
+
+	<style type="text/css">
+		body {
+			background:white;
+			margin:0px;
+			padding:0px;
+		}
+
+		
+		header{
+			margin-top:80px;
+			margin-left:200px;;
+			margin-bottom:0px;
+			margin-right:0px;
+			color:black;
+		}
+		
+		nav {
+			margin-left:200px;;
+			margin-right:100px;
+			font-size:18px;
+			letter-spacing:2px;	
+		}
+		hr {
+			height:1px; 
+			border-top:1px; 
+		}	
+		section {
+			color:blue;
+			margin-top:30px;
+			margin-left:220px;
+		}	
+	
+	</style>
+</head>
+<body> 
+		<header>
+			<!-- <h2>极简主义者——ICKelin</h2> -->
+			<h2>Happy Hacking——ICKelin</h2>
+		</header>
+
+		<!--导航条-->
+<!--
+		<nav>
+			<a href="">看过的书</a>
+			<a href="">去过的地方</a>
+			<a href="">有意思的人</a>
+		</nav>
+-->
+		<hr> 
+
+		<!-- 文章列表 -->
+		<section id = "articles">
+		
+		</section>
+</body>
+
+</html>
