@@ -1,10 +1,9 @@
-
 #include "http.h"
 
 int GetRawData(int fd, char *line, int length) {
-	if(recv(fd, line, length, 0) != -1)
-		return 0;
-	return -1;
+	if(recv(fd, line, length, 0) <0)
+		return -1;
+	return 0;
 }
 
 void GetMethod(HTTP *http, const char *line) {

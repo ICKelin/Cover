@@ -16,8 +16,8 @@ AR  = ar
 INCLUDE_PATH  	    = ./database/ ./xml/ /usr/include/mysql ./http ./module
 LIB_PATH 	    =  
 CFLAGS 		    += -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE
-LDFLAGS 	    = -lpthread -lmysqlclient 
-TARGETBIN 	    = social
+LDFLAGS 	    = -lpthread
+TARGETBIN 	    = Cover
 
 
 INCLUDE = -I. $(patsubst %, -I%, $(INCLUDE_PATH))

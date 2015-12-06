@@ -17,13 +17,8 @@
 #include <map>
 #include <algorithm>
 
-#include "mysqldb.h"
 #include "tinyxml.h"
 #include "http.h"
-
-#ifndef INVALID_SOCKET
-#define INVALID_SOCKET -1
-#endif
 
 using namespace std;
 
@@ -33,12 +28,4 @@ struct Module {
 	string 	ModuleName;
 	ModuleFunc func;
 };
-
-void ServeFile(const char*);
-
-void Index(HTTP *phttp, int sock);
-
-void Signin(HTTP *phttp, int sock);
-
-void Article(HTTP *phttp, int sock);
 
