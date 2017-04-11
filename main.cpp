@@ -20,6 +20,7 @@
 #include "mysqldb.h"
 #include "tinyxml.h"
 #include "module.h"
+#include "printlog.h"
 
 #ifndef INVALID_SOCKET
 #define INVALID_SOCKET -1
@@ -39,13 +40,6 @@ struct Config {
 	string  TemplateFileRoot;	//模版文件路径
 	bool	RequestLogEnable;	//请求是否记录日志
 	
-	string  DBHost;			//数据库主机名
-	int 	DBPort;			//数据库端口
-	string 	DBUser;			//数据库用户名
-	string  DBPassword;		//数据库密码
-	string  DBName;			//数据库名称
-	
-	int 	DBManagerCount;		//创建数据库连接的个数
 	int 	LogFileEnable;		//文件日志是否启动
 	string	LogFilePath;		//日志文件的路径
 			
@@ -64,38 +58,23 @@ pthread_mutex_t	gModuleListMutex = PTHREAD_MUTEX_INITIALIZER;
 //配置信息
 Config config;
 
-void Log( const char *format, ... ) {
-	va_list ap;
-	va_start( ap, format );
-	char szBuf[256];
-	memset( szBuf, 0, 256 );
-	vsnprintf( szBuf, sizeof( szBuf ) - 1, format, ap );
-	va_end( ap );
-
-#ifdef _Debug
-	fprintf( stderr, "%s\n", szBuf );
-#else
-	syslog( LOG_ERR, szBuf );
-#endif
-}
-
 string GetChildContent( TiXmlElement *pTiElement, const char *pszElement ) {
 	if ( pTiElement == NULL ){
-		Log( "pTiElement is null" );
+		_printlog(__FILE__, __LINE__, PRIORITY_ERROR, "pTiElement is null" );
 		return string();
 	}
 
 	TiXmlElement *pTiChild = pTiElement->FirstChildElement( pszElement );
 	if ( pTiChild == NULL )
 	{
-		Log( "pTiChild is null" );
+		_printlog(__FILE__, __LINE__, PRIORITY_ERROR, "pTiChild is null" );
 		return string();
 	}
 
 	TiXmlNode *pTiNode = pTiChild->FirstChild();
 	if ( pTiNode == NULL )
 	{
-		Log( "pTiNode is null" );
+		_printlog(__FILE__, __LINE__, PRIORITY_ERROR, "pTiNode is null" );
 		return string();
 	}
 
@@ -126,12 +105,12 @@ int ReadConfig(const char* ConfigFileName) {
 	
 	doc.LoadFile(ConfigFileName);
 	if ( doc.Error() ) {
-		Log("parse xml error, description = %s", doc.ErrorDesc());;
+		_printlog(__FILE__, __LINE__, PRIORITY_ERROR, "parse xml error, description = %s", doc.ErrorDesc());
 		return -1;
 	}
 	TiXmlElement *root = doc.RootElement();
 	if ( root == NULL ){
-		Log("the format of xml is illege");
+		_printlog(__FILE__, __LINE__, PRIORITY_ERROR, "the format of xml is illege");
 		return -1;
 	}
 	config.Version = GetChildContent( root, "version");
@@ -153,7 +132,7 @@ int InitNetwork() {
 	
 	sock = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if ( sock == INVALID_SOCKET ) {
-		Log("socket failed");
+		_printlog(__FILE__, __LINE__, PRIORITY_ERROR, "socket failed");
 		return -1;
 	}
 	memset( &addr, 0, sizeof(addr));
@@ -161,16 +140,16 @@ int InitNetwork() {
 	addr.sin_addr.s_addr  = htonl( INADDR_ANY );
 	addr.sin_port = htons( config.Port );
 	if ( bind(sock, ( struct sockaddr * )&addr, sizeof( addr )) != 0) {
-		Log("Bind Error %s", strerror(errno));
+		_printlog(__FILE__, __LINE__, PRIORITY_ERROR, "Bind Error %s", strerror(errno));
 		return -1;
 	}
 	if ( listen( sock, 5 ) != 0 ) {
-		Log("listen Error %s\n", strerror(errno));
+		_printlog(__FILE__, __LINE__, PRIORITY_ERROR, "Listen Error %s", strerror(errno));
 		return -1;
 	}
 	int flag = 1;
 	if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag))< 0) {
-		Log("Reuse Address Error %s", strerror(errno));
+		_printlog(__FILE__, __LINE__, PRIORITY_ERROR, "Reuse Address Error %s", strerror(errno));
 	}
 	return sock;
 }
@@ -183,12 +162,12 @@ void* HandlerEntry(void *psock) {
 	HTTP http;
 	char *line = (char *)malloc(sizeof(char) * 1024 * 5);
 	if( line == NULL ) {
-		Log("malloc %s\n", strerror(errno));
+		_printlog(__FILE__, __LINE__, PRIORITY_ERROR, "malloc %s", strerror(errno));
 		return NULL;
 	}
 	GetRawData(sock, line, 1024 * 5);
 	GetMethod(&http, line);
-	printf("Method %s\n", http.Method.c_str());	
+	_printlog(__FILE__, __LINE__, PRIORITY_INFO, "Method %s", http.Method.c_str());	
 	if ( strcasecmp(http.Method.c_str(), "GET") == 0) {
 		ParseGETLine(&http, line);
 		ParseGETHead(&http, line);
@@ -210,7 +189,7 @@ void* HandlerEntry(void *psock) {
 		ParsePOSTQueryString(&http, line);
 		map<string, string>::iterator it;
 		for(it = http.Params.begin(); it != http.Params.end(); it++)
-			printf("key %s value %s\n", it->first.c_str(), it->second.c_str());
+		printf("key %s value %s\n", it->first.c_str(), it->second.c_str());
 		//解析post提交的数据
 	}
 	return NULL;
@@ -220,12 +199,12 @@ int Init(){
 
 	int sock = -1;
 	if(ReadConfig("config.xml") < 0) {
-		Log("ReadConfig Error");
+		_printlog(__FILE__, __LINE__, PRIORITY_ERROR, "ReadConfig Error");
 		return -1;
 	}
 	
 	if( (sock = InitNetwork()) < 0) {
-		Log("Iniatial NetWork Error");
+		_printlog(__FILE__, __LINE__, PRIORITY_ERROR, "Iniatial NetWork Error");
 		return -1;
 	}
 	return sock;
@@ -240,24 +219,24 @@ void Run(int sock) {
 		if ( client != INVALID_SOCKET ) {
 			pclient = (int*)malloc(sizeof(int));
 			if(pclient == NULL) {
-				Log("malloc error %s", strerror(errno));
+				_printlog(__FILE__, __LINE__, PRIORITY_ERROR, "malloc error %s", strerror(errno));
 				return;
 			}
 			*pclient = client;
 			pthread_create(&tid, NULL, &HandlerEntry, (void*)pclient);
 		}
 		else{
-			Log("Accept Failed");
+			_printlog(__FILE__, __LINE__, PRIORITY_ERROR, "Accept Failed");
 		}
 	}		
 }
 
 int main(int argc, char **argv) {
-	
 	int sock = Init();
 	if(sock == -1) {
-		Log("Initial Server Error %s", strerror(errno));
+		_printlog(__FILE__, __LINE__, PRIORITY_ERROR, "Initial Server Error %s", strerror(errno));
 		return -1;
 	}
+	_printlog(__FILE__, __LINE__, PRIORITY_INFO, "server start");
 	Run(sock);	
 }

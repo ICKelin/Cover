@@ -13,7 +13,7 @@ CC  = gcc
 CXX = g++
 AR  = ar
 
-INCLUDE_PATH  	    = ./database/ ./xml/ /usr/include/mysql ./http ./module
+INCLUDE_PATH  	    = ./database/ ./xml/ /usr/include/mysql ./http ./module ./log
 LIB_PATH 	    =  
 CFLAGS 		    += -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE
 LDFLAGS 	    = -lpthread -lmysqlclient
