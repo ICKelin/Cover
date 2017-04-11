@@ -29,3 +29,6 @@ struct Module {
 	ModuleFunc func;
 };
 
+void Index(HTTP *http, int sock);
+void Signin(HTTP *http, int sock);
+void Article(HTTP *http, int sock);

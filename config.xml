@@ -2,7 +2,7 @@
 	<version>1.0</version>
 	<is_debug>true</is_debug>
 	<port>58422</port>
-	<domain>127.0.0.1</domain>
+	<domain>0.0.0.0</domain>
 	<static>./static</static>
 	<template>./template</template>
 	<log_enable>1</log_enable>

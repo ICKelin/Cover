@@ -224,7 +224,7 @@ void* HandlerEntry(void *psock) {
 		printf("URI %s\n", http.Uri.c_str());		
 #endif
 		pthread_mutex_lock(&gModuleListMutex);
-		for(int i = 0; i< ModuleList.size(); i++)
+		for(int i = 0; i < ModuleList.size(); i++)
 			if (ModuleList[i].ModuleName == http.Uri) {
 				ModuleList[i].func(&http, sock);
 			}
@@ -249,12 +249,13 @@ void destroy() {
 }
 
 //添加模块接口
-int AddModule(char* name, ModuleFunc func) {
+int AddModule(const char* name, ModuleFunc func) {
 	Module module;
 	
 	module.ModuleName = name;
 	module.func = func;	
-	ModuleList.push_back(module);	
+	ModuleList.push_back(module);
+	return 1;
 }
 
 int Init(){

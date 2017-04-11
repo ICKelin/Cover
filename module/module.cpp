@@ -54,9 +54,6 @@ void Article(HTTP *http, int sock) {
 
 //登录模块
 void Signin(HTTP *http, int sock) {
-	char buf[256];
 	ServeFile(http, sock, "/sigin.html");		
 }
-
-//评论模块
 
