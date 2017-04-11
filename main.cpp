@@ -58,9 +58,6 @@ typedef void*(*ThreadFunc)(void*);
 //模块列表
 vector<Module> ModuleList;
 
-//数据库连接队列
-//vector<DBI*> DBConnections;
-
 //模块访问列表访问锁
 pthread_mutex_t	gModuleListMutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -143,33 +140,9 @@ int ReadConfig(const char* ConfigFileName) {
 	config.Domain  = GetChildContent( root, "domain");
 	config.StaticFileUrl = GetChildContent( root, "static");
 	config.TemplateFileRoot = GetChildContent( root, "template");
-	config.DBHost = GetChildContent( root, "db_host");
-	config.DBPort = atoi( GetChildContent( root, "db_port").c_str() );
-	config.DBName = GetChildContent( root, "db_name");
-	config.DBUser = GetChildContent( root, "db_user");
-	config.DBPassword = GetChildContent( root, "db_password");
-	config.DBManagerCount = atoi( GetChildContent( root, "db_connect_count").c_str() );
 	config.LogFileEnable= atoi( GetChildContent( root, "log_enable").c_str() );
 	config.LogFilePath = GetChildContent( root, "log_path");
 	
-	return 0;
-}
-
-//初始化数据库连接池
-int InitDBConnect() {
-#if 0	
-	for(int i = 0; i < config.DBManagerCount; i++) {
-		DBI *dbi = (DBI*)malloc(sizeof(DBI));
-		if (dbi == NULL) {
-			return -1;
-		}
-		if (db_connect( dbi, config.DBHost.c_str(), config.DBUser.c_str(), config.DBPassword.c_str(), config.DBName.c_str(), config.DBPort) != 0) {
-			Log("Cannot Connect to Database");
-			return -1;
-		} 
-		DBConnections.push_back(dbi);
-	}
-#endif	
 	return 0;
 }
 
@@ -243,30 +216,11 @@ void* HandlerEntry(void *psock) {
 	return NULL;
 }
 
-//int 3中断回调
-void destroy() {
-	
-}
-
-//添加模块接口
-int AddModule(const char* name, ModuleFunc func) {
-	Module module;
-	
-	module.ModuleName = name;
-	module.func = func;	
-	ModuleList.push_back(module);
-	return 1;
-}
-
 int Init(){
 
 	int sock = -1;
 	if(ReadConfig("config.xml") < 0) {
 		Log("ReadConfig Error");
-		return -1;
-	}
-	if(InitDBConnect() < 0)	{
-		Log("Connect To Database Error");
 		return -1;
 	}
 	
@@ -305,10 +259,5 @@ int main(int argc, char **argv) {
 		Log("Initial Server Error %s", strerror(errno));
 		return -1;
 	}
-#ifdef _Debug
-	AddModule("/signin", Signin);
-	AddModule("/index.html", Index);
-	AddModule("/article", Article);	
-#endif
 	Run(sock);	
 }
