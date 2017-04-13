@@ -2,6 +2,7 @@
 
 void Index(HTTP *http, int sock) {
 	_printlog(__FILE__, __LINE__, PRIORITY_INFO, "Serving Index");
+	ServeFile(http, sock, "index.html");
 }
 
 int main(int argc, char **argv) {

@@ -36,3 +36,6 @@ struct HTTP {
 };
 
 int ParseHttp(int sock, HTTP *http);
+
+int Response(int sock, void *data, int length);
+void ServeFile(HTTP *http, int sock, const char *filename);
