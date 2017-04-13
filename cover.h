@@ -47,4 +47,6 @@ struct Config {
 //读取配置信息
 int ReadConfig(const char* ConfigFileName);
 
+//添加模块
+void AddModule(string patterni, ModuleFunc func);
 void ListenAndServe();

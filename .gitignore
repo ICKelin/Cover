@@ -33,3 +33,7 @@
 
 # Bin file
 Cover
+
+# 
+*.swp
+*.SWP

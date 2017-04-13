@@ -149,7 +149,6 @@ void Run(int sock) {
 		}
 	}		
 }
-
 void AddModule(string pattern, ModuleFunc func) {
 	Module module;
 	module.ModuleName = pattern;
