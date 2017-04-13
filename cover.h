@@ -44,16 +44,7 @@ struct Config {
 			
 };
 
-static string GetChildContent( TiXmlElement *pTiElement, const char *pszElement ); 
-
-static string GetFormatTime( time_t pTime);
-
 //读取配置信息
 int ReadConfig(const char* ConfigFileName);
-
-//初始化网络
-static int InitNetwork();
-
-static void Run(int sock);
 
 void ListenAndServe();

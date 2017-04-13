@@ -1,5 +1,11 @@
 #include "http.h"
 
+int GetRawData(int fd, char *line, int length);
+void GetMethod(HTTP *http, const char *line);
+void ParseGETLine(HTTP *http, char *line);
+void ParseGETHead(HTTP *http, char *line);
+void GetRequestParameter(HTTP *http, char *line);
+
 int ParseHttp(int sock, HTTP *http) {
 	char data[1024*4];
 	GetRawData(sock, data, 1024*4);

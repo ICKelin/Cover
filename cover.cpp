@@ -2,6 +2,10 @@
 
 using namespace std;
 
+string GetChildContent(TiXmlElement *pTiElement, const char *pszElement);
+int InitNetwork();
+void Run(int sock);
+
 //模块列表
 vector<Module> ModuleList;
 
@@ -11,7 +15,7 @@ pthread_mutex_t	gModuleListMutex = PTHREAD_MUTEX_INITIALIZER;
 //配置信息
 Config config;
 
-static string GetChildContent( TiXmlElement *pTiElement, const char *pszElement ) {
+string GetChildContent( TiXmlElement *pTiElement, const char *pszElement ) {
 	if ( pTiElement == NULL ){
 		_printlog(__FILE__, __LINE__, PRIORITY_ERROR, "pTiElement is null" );
 		return string();
@@ -32,23 +36,6 @@ static string GetChildContent( TiXmlElement *pTiElement, const char *pszElement 
 	}
 
 	return pTiNode->Value();
-}
-
-static string GetFormatTime( time_t pTime ) {
-	time_t tmTemp;
-	if ( pTime ){
-		tmTemp = pTime;
-	}
-	else{
-		tmTemp = time( NULL );
-	}
-
-	tm *temp;
-	temp = localtime( &tmTemp );
-	char szTime[32];
-	sprintf( szTime, "%d-%.2d-%.2d %.2d:%.2d:%.2d", temp->tm_year + 1900, temp->tm_mon + 1, temp->tm_mday,
-	         temp->tm_hour, temp->tm_min, temp->tm_sec );
-	return szTime;
 }
 
 //读取配置信息
@@ -79,7 +66,7 @@ int ReadConfig(const char* ConfigFileName) {
 }
 
 //初始化网络
-static int InitNetwork() {
+int InitNetwork() {
 	int sock = -1;
 	sockaddr_in addr;
 	
@@ -132,7 +119,7 @@ void* HandlerEntry(void *psock) {
 	return NULL;
 }
 
-static int Init(){
+int Init(){
 	int sock = -1;
 	
 	if( (sock = InitNetwork()) < 0) {
@@ -142,7 +129,7 @@ static int Init(){
 	return sock;
 }
 
-static void Run(int sock) {
+void Run(int sock) {
 	int client = -1;
 	int *pclient = NULL;
 	while(1) {

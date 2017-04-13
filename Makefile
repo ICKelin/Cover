@@ -5,7 +5,7 @@ endif
 ifeq ($(CFG), Debug)
 	CFLAGS = -g -D __FOR_DEBUG_KO
 else
-	CFLAGS = -O1 -Wall  
+	CFLAGS = -O1 -Wall
 endif
 
 
@@ -13,10 +13,10 @@ CC  = gcc
 CXX = g++
 AR  = ar
 
-INCLUDE_PATH  	    = ./database/ ./xml/ /usr/include/mysql ./http ./module ./log
+INCLUDE_PATH  	    = ./xml/ ./http ./module ./log
 LIB_PATH 	    =  
 CFLAGS 		    += -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE
-LDFLAGS 	    = -lpthread -lmysqlclient
+LDFLAGS 	    = -lpthread 
 TARGETBIN 	    = Cover
 
 
