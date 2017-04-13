@@ -34,6 +34,8 @@ struct HTTP {
 	map<string, string> Params;	//请求参数字段
 };
 
+int ParseHttp(int sock, HTTP *http);
+
 int GetRawData(int fd, char *line, int length);
 
 void GetMethod(HTTP* http, const char*line);

@@ -1,5 +1,15 @@
 #include "http.h"
 
+int ParseHttp(int sock, HTTP *http) {
+	char data[1024*4];
+	GetRawData(sock, data, 1024*4);
+	GetMethod(http, data);
+	if (http->Method == "GET") {
+		ParseGETHead(http, data);
+		ParseGETLine(http, data);
+	}
+}
+
 int GetRawData(int fd, char *line, int length) {
 	if(recv(fd, line, length, 0) <0)
 		return -1;
@@ -94,44 +104,7 @@ void ParseGETHead(HTTP *http, char *line) {
 	}
 }
 
-//解析POST的请求行
-void ParsePOSTLine(HTTP *http, char* line) {
-	ParseGETLine(http, line);
-}
-
-//解析POST的请求头
-void ParsePOSTHead(HTTP *http, char *line) {
-	ParseGETHead(http, line);
-}
-
-//
-void ParsePOSTQueryString(HTTP *http, char *line) {
-	char *pos = strstr(line ,"\r\n\r\n");
-	if(pos != NULL) {
-		pos = pos + strlen("\r\n\r\n");
-		//
-		while(*pos) {
-			char key[256];
-			char value[256];
-			int i = 0;
-			while(*pos && *pos != '=')
-				key[i++] = *pos++;
-			i = 0;
-			pos++;
-			while(*pos && *pos != '&')
-				value[i++] = *pos++;
-			pos++;
-			http->Params.insert(pair<string, string>(key, value));
-		}
-	}
-}
-
 //获取请求的参数
 string GetParameter(HTTP *http, string Parameter) {
 	return http->Params[Parameter];
-}
-
-//获取http头信息
-string GetHead(HTTP *http, string head) {
-	return http->Heads[head];
 }

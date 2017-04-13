@@ -17,7 +17,6 @@
 #include <map>
 #include <algorithm>
 
-#include "mysqldb.h"
 #include "tinyxml.h"
 #include "module.h"
 #include "printlog.h"

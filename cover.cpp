@@ -1,53 +1,6 @@
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <memory.h>
-#include <time.h>
-
-#include <syslog.h>
-#include <unistd.h>
-#include <error.h>
-#include <errno.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <sys/types.h>
-
-#include <string>
-#include <vector>
-#include <map>
-#include <algorithm>
-
-#include "mysqldb.h"
-#include "tinyxml.h"
-#include "module.h"
-#include "printlog.h"
-
-#ifndef INVALID_SOCKET
-#define INVALID_SOCKET -1
-#endif
-
-#define _Debug
+#include "cover.h"
 
 using namespace std;
-
-struct Config {
-	string  Version;		//版本
-	bool	IsDebug;		//是否调试版
-	int 	Port;			//监听端口
-	string  Domain;			//域名
-	string  StaticFileUrl;		//静态文件url
-	string  StaticFileRoot;		//静态文件路径
-	string  TemplateFileRoot;	//模版文件路径
-	bool	RequestLogEnable;	//请求是否记录日志
-	
-	int 	LogFileEnable;		//文件日志是否启动
-	string	LogFilePath;		//日志文件的路径
-			
-};
-
-
-
-typedef void*(*ThreadFunc)(void*);
 
 //模块列表
 vector<Module> ModuleList;
@@ -58,7 +11,7 @@ pthread_mutex_t	gModuleListMutex = PTHREAD_MUTEX_INITIALIZER;
 //配置信息
 Config config;
 
-string GetChildContent( TiXmlElement *pTiElement, const char *pszElement ) {
+static string GetChildContent( TiXmlElement *pTiElement, const char *pszElement ) {
 	if ( pTiElement == NULL ){
 		_printlog(__FILE__, __LINE__, PRIORITY_ERROR, "pTiElement is null" );
 		return string();
@@ -81,7 +34,7 @@ string GetChildContent( TiXmlElement *pTiElement, const char *pszElement ) {
 	return pTiNode->Value();
 }
 
-string GetFormatTime( time_t pTime ) {
+static string GetFormatTime( time_t pTime ) {
 	time_t tmTemp;
 	if ( pTime ){
 		tmTemp = pTime;
@@ -126,7 +79,7 @@ int ReadConfig(const char* ConfigFileName) {
 }
 
 //初始化网络
-int InitNetwork() {
+static int InitNetwork() {
 	int sock = -1;
 	sockaddr_in addr;
 	
@@ -165,34 +118,17 @@ void* HandlerEntry(void *psock) {
 		_printlog(__FILE__, __LINE__, PRIORITY_ERROR, "malloc %s", strerror(errno));
 		return NULL;
 	}
-	// ParseHttp(sock, &http);
-	GetRawData(sock, line, 1024 * 5);
-	GetMethod(&http, line);
-	_printlog(__FILE__, __LINE__, PRIORITY_INFO, "Method %s", http.Method.c_str());	
-	if ( strcasecmp(http.Method.c_str(), "GET") == 0) {
-		ParseGETLine(&http, line);
-		ParseGETHead(&http, line);
-		free(line);
-#ifdef _Debug	
-		printf("URI %s\n", http.Uri.c_str());		
-#endif
+	int ret = ParseHttp(sock, &http);
+	if (ret == 0) {
 		pthread_mutex_lock(&gModuleListMutex);
-		for(int i = 0; i < ModuleList.size(); i++)
-			if (ModuleList[i].ModuleName == http.Uri) {
+		for (int i = 0; i < ModuleList.size(); i++) {
+			if(ModuleList[i].ModuleName == http.Uri) {
 				ModuleList[i].func(&http, sock);
 			}
-		pthread_mutex_unlock(&gModuleListMutex);	
-		close(sock);
+		}
+		pthread_mutex_unlock(&gModuleListMutex);
 	}
-	else if( strcasecmp(http.Method.c_str(), "POST") == 0) {
-		ParsePOSTLine(&http, line);
-		ParsePOSTHead(&http, line);
-		ParsePOSTQueryString(&http, line);
-		map<string, string>::iterator it;
-		for(it = http.Params.begin(); it != http.Params.end(); it++)
-		printf("key %s value %s\n", it->first.c_str(), it->second.c_str());
-		//解析post提交的数据
-	}
+	// 404
 	return NULL;
 }
 
@@ -225,6 +161,13 @@ static void Run(int sock) {
 			_printlog(__FILE__, __LINE__, PRIORITY_ERROR, "Accept Failed");
 		}
 	}		
+}
+
+void AddModule(string pattern, ModuleFunc func) {
+	Module module;
+	module.ModuleName = pattern;
+	module.func = func;
+	ModuleList.push_back(module);
 }
 
 void ListenAndServe() {
