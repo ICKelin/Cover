@@ -115,6 +115,8 @@ void* HandlerEntry(void *psock) {
 		}
 		pthread_mutex_unlock(&gModuleListMutex);
 	}
+	close(sock);
+	_printlog(__FILE__, __LINE__, PRIORITY_INFO, "Release connection %d", sock);
 	// 404
 	return NULL;
 }

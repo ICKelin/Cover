@@ -6,10 +6,29 @@ void ParseGETLine(HTTP *http, char *line);
 void ParseGETHead(HTTP *http, char *line);
 void GetRequestParameter(HTTP *http, char *line);
 
+static void LogRequest(HTTP *http) {
+	_printlog(__FILE__, __LINE__, PRIORITY_INFO,
+					"FD: %d %s %s", http->fd,  http->Method.c_str(), http->Uri.c_str());
+	string buf;
+	for(map<string, string>::iterator it = http->Heads.begin(); it != http->Heads.end(); it++) {
+		buf = buf + " " + it->first + " " + it->second;
+	}
+	_printlog(__FILE__, __LINE__, PRIORITY_INFO, " %s ", buf.c_str());
+	buf = "";
+	for(map<string, string>::iterator it = http->Params.begin(); it != http->Params.end(); it++) {
+		buf = buf + " " + it->first + " " + it->second;
+	}
+	_printlog(__FILE__, __LINE__, PRIORITY_INFO, " %s ", buf.c_str());
+}
+
 int ParseHttp(int sock, HTTP *http) {
 	char data[1024*4];
+	http->fd = sock;
 	GetRawData(sock, data, 1024*4);
 	GetMethod(http, data);
+	ParseGETHead(http, data);
+	ParseGETLine(http, data);
+	LogRequest(http);
 	if (http->Method == "GET") {
 		ParseGETHead(http, data);
 		ParseGETLine(http, data);
@@ -39,11 +58,11 @@ void ParseGETLine(HTTP *http, char *line) {
 		npos++;
 	char *buf = (char*)malloc(512);
 	if(buf == NULL) {
-		fprintf(stderr, "malloc error %s\n", strerror(errno));
+		_printlog(__FILE__, __LINE__, PRIORITY_FATAL, "malloc error %s\n", strerror(errno));
 		return;
 	}
 	snprintf(buf, npos - begin +1, "%s", begin);
-	if(strcmp(buf, "/") == 0) {
+	if(strcmp(buf, "/") == 0 || strcmp(buf, "") == 0) {
 		http->Uri = "/index.html";
 		free(buf);
 	}
@@ -54,7 +73,7 @@ void ParseGETLine(HTTP *http, char *line) {
 			npos++;
 		}
 		snprintf(buf, npos - begin +1, "%s", begin);
-		if(strcmp(buf, "/") == 0)
+		if(strcmp(buf, "/") == 0 || strcmp(buf, "") == 0)
 			http->Uri = "/index.html";
 		else
 			http->Uri.assign(buf);
@@ -123,7 +142,8 @@ string GetParameter(HTTP *http, string Parameter) {
 
 //返回数据
 int Response(int fd, void *data, int length) {
-        return send(fd, data, length, 0);
+
+		return send(fd, data, length, 0);
 }
 
 //读取文件并返回
@@ -131,10 +151,10 @@ void ServeFile(HTTP *http, int sock, const char *fileName) {
         char uri[256];
         char buf[256];
         sprintf(uri, "%s%s", DEFAULT, fileName);
-        printf("serve file %s\n", fileName);
+        _printlog(__FILE__, __LINE__, PRIORITY_INFO, "serve file %s\n", fileName);
         FILE *fp = fopen(uri, "r");
         if (fp == NULL) {
-                fprintf(stderr, "fopen error %s\n", strerror(errno));
+                _printlog(__FILE__, __LINE__, PRIORITY_ERROR, "fopen error %s\n", strerror(errno));
                 return;
         }
         strcpy(buf, "HTTP/1.1 200 OK\r\n");
@@ -145,6 +165,5 @@ void ServeFile(HTTP *http, int sock, const char *fileName) {
         while(fgets(buf, 256, fp) != NULL)
                 send(sock, buf, strlen(buf), 0);
         fclose(fp);
-        close(sock);
 }
 

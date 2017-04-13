@@ -17,6 +17,7 @@
 #include <map>
 #include <algorithm>
 
+#include "printlog.h"
 #include "tinyxml.h"
 
 #ifndef INVALID_SOCKET
