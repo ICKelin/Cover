@@ -6,6 +6,7 @@ void Index(HTTP *http, int sock) {
 }
 
 int main(int argc, char **argv) {
+	initlogs("Cover", PRIORITY_INFO, "./", 1, 1024);
 	if (ReadConfig("config.xml") < 0) {
 		_printlog(__FILE__, __LINE__, PRIORITY_ERROR, "ReadConfig Error");
 		return -1;
@@ -14,4 +15,5 @@ int main(int argc, char **argv) {
 	AddModule("/index.html", Index);
 	ListenAndServe();
 	_printlog(__FILE__, __LINE__, PRIORITY_ERROR, "Run Error");
+	freelog();
 }

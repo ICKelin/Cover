@@ -106,14 +106,27 @@ void* HandlerEntry(void *psock) {
 		return NULL;
 	}
 	int ret = ParseHttp(sock, &http);
+	ModuleFunc func;
+	int flag = 0;
 	if (ret == 0) {
 		pthread_mutex_lock(&gModuleListMutex);
-		for (int i = 0; i < ModuleList.size(); i++) {
+		int i = 0;
+		for (i = 0; i < ModuleList.size(); i++) {
 			if(ModuleList[i].ModuleName == http.Uri) {
-				ModuleList[i].func(&http, sock);
+				//ModuleList[i].func(&http, sock);
+				func = ModuleList[i].func;
+				break;
 			}
 		}
+		if(i == ModuleList.size()) {
+			flag = 1;
+		}
 		pthread_mutex_unlock(&gModuleListMutex);
+		if (flag) {
+			ServeFile(&http, sock, http.Uri.c_str());
+		} else {
+			func(&http, sock);
+		}
 	}
 	close(sock);
 	_printlog(__FILE__, __LINE__, PRIORITY_INFO, "Release connection %d", sock);
